@@ -46,7 +46,7 @@ def calculate_score(column_b: Any, column_m: Any, column_e: Any, column_h: Any) 
     e_coef = 1 if is_passed(column_e) else 0
     h_coef = 1 if is_passed(column_h) else 0
 
-    score = (0.4 * b_coef + 0.35 * m_coef + 0.25 * e_coef) * (1 + 0.2 * h_coef)
+    score = ((0.4 * b_coef) + (0.35 * m_coef) + (0.25 * e_coef)) * ((1 + (0.2 * h_coef)))
     return round(score, 4)
 
 
@@ -58,11 +58,12 @@ def remove_existing_score_column(sheet: Worksheet) -> None:
 
 
 def process_worksheet(sheet: Worksheet) -> None:
+    max_data_row = sheet.max_row
     remove_existing_score_column(sheet)
     sheet.insert_cols(SCORE_COLUMN_INDEX)
     sheet.cell(row=1, column=SCORE_COLUMN_INDEX, value=SCORE_HEADER)
 
-    for row in range(2, sheet.max_row + 1):
+    for row in range(2, max_data_row + 1):
         score = calculate_score(
             sheet.cell(row=row, column=2).value,
             sheet.cell(row=row, column=13).value,
