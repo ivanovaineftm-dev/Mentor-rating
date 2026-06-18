@@ -26,8 +26,8 @@
       <form action="{{ url_for('calculate') }}" method="post" enctype="multipart/form-data" class="upload-form">
         <label class="file-drop">
           <span class="file-title">Выберите файл Excel</span>
-          <span class="file-note">Поддерживаются .xlsx, .xlsm, .xltx, .xltm</span>
-          <input type="file" name="file" accept=".xlsx,.xlsm,.xltx,.xltm" required>
+          <span class="file-note">Можно загрузить любой файл Excel — проверка выполняется при обработке</span>
+          <input type="file" name="file" accept=".xlsx,.xlsm,.xltx,.xltm,.xls,.xlt,.xlsb,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" required>
         </label>
         <button type="submit">Рассчитать</button>
       </form>

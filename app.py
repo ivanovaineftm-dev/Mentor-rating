@@ -9,19 +9,12 @@ from openpyxl import load_workbook
 from openpyxl.worksheet.worksheet import Worksheet
 from werkzeug.utils import secure_filename
 
-ALLOWED_EXTENSIONS = {"xlsx", "xlsm", "xltx", "xltm"}
 SCORE_COLUMN_INDEX = 14  # Column N, immediately after M.
 SCORE_HEADER = "Балл"
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = "mentor-rating-local-secret"
 app.config["MAX_CONTENT_LENGTH"] = 20 * 1024 * 1024
-
-
-def is_allowed_file(filename: str) -> bool:
-    """Return True when the uploaded filename is supported by openpyxl."""
-    suffix = Path(filename).suffix.lower().lstrip(".")
-    return suffix in ALLOWED_EXTENSIONS
 
 
 def is_blank(value: Any) -> bool:
@@ -102,10 +95,7 @@ def calculate():
         flash("Выберите Excel-файл для обработки.", "error")
         return redirect(url_for("index"))
 
-    filename = secure_filename(uploaded_file.filename)
-    if not is_allowed_file(filename):
-        flash("Загрузите файл формата .xlsx, .xlsm, .xltx или .xltm.", "error")
-        return redirect(url_for("index"))
+    filename = secure_filename(uploaded_file.filename) or "rating"
 
     try:
         output = process_workbook(BytesIO(uploaded_file.read()))
