@@ -10,9 +10,7 @@ from openpyxl.worksheet.worksheet import Worksheet
 from werkzeug.utils import secure_filename
 
 SCORE_COLUMN_INDEX = 14  # Column N, immediately after M.
-DETAIL_COLUMN_INDEX = SCORE_COLUMN_INDEX + 1  # Column O, immediately after score.
 SCORE_HEADER = "Балл"
-DETAIL_HEADER = "Подробный расчет"
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = "mentor-rating-local-secret"
@@ -42,69 +40,37 @@ def is_passed(value: Any) -> bool:
     return isinstance(value, str) and value.strip().casefold() == "сдан"
 
 
-def get_score_components(column_b: Any, column_m: Any, column_e: Any, column_h: Any) -> dict[str, float]:
+def calculate_score(column_b: Any, column_m: Any, column_e: Any, column_h: Any) -> float:
     b_coef = 1 if is_blank(column_b) else 0 if is_numeric(column_b) else 1
     m_coef = 1 if is_blank(column_m) else 0 if is_numeric(column_m) else 0
     e_coef = 1 if is_passed(column_e) else 0
     h_coef = 1 if is_passed(column_h) else 0
-    base_score = (0.4 * b_coef) + (0.35 * m_coef) + (0.25 * e_coef)
-    h_multiplier = 1 + (0.2 * h_coef)
-    score = round(base_score * h_multiplier, 4)
 
-    return {
-        "b_coef": b_coef,
-        "m_coef": m_coef,
-        "e_coef": e_coef,
-        "h_coef": h_coef,
-        "base_score": round(base_score, 4),
-        "h_multiplier": round(h_multiplier, 4),
-        "score": score,
-    }
+    score = ((0.4 * b_coef) + (0.35 * m_coef) + (0.25 * e_coef)) * ((1 + (0.2 * h_coef)))
+    return round(score, 4)
 
 
-def calculate_score(column_b: Any, column_m: Any, column_e: Any, column_h: Any) -> float:
-    return get_score_components(column_b, column_m, column_e, column_h)["score"]
-
-
-def format_score_calculation(column_b: Any, column_m: Any, column_e: Any, column_h: Any) -> str:
-    components = get_score_components(column_b, column_m, column_e, column_h)
-    return (
-        f"B={components['b_coef']}: 0,4×{components['b_coef']}={0.4 * components['b_coef']:.2f}; "
-        f"M={components['m_coef']}: 0,35×{components['m_coef']}={0.35 * components['m_coef']:.2f}; "
-        f"E={components['e_coef']}: 0,25×{components['e_coef']}={0.25 * components['e_coef']:.2f}; "
-        f"база={components['base_score']:.2f}; "
-        f"H={components['h_coef']}: множитель 1+0,2×{components['h_coef']}={components['h_multiplier']:.2f}; "
-        f"итог={components['base_score']:.2f}×{components['h_multiplier']:.2f}={components['score']:.4f}"
-    )
-
-
-def remove_existing_result_columns(sheet: Worksheet) -> None:
-    for column_index, header_text in (
-        (DETAIL_COLUMN_INDEX, DETAIL_HEADER),
-        (SCORE_COLUMN_INDEX, SCORE_HEADER),
-    ):
-        if sheet.max_column >= column_index:
-            header = sheet.cell(row=1, column=column_index).value
-            if isinstance(header, str) and header.strip().casefold() == header_text.casefold():
-                sheet.delete_cols(column_index, 1)
+def remove_existing_score_column(sheet: Worksheet) -> None:
+    if sheet.max_column >= SCORE_COLUMN_INDEX:
+        header = sheet.cell(row=1, column=SCORE_COLUMN_INDEX).value
+        if isinstance(header, str) and header.strip().casefold() == SCORE_HEADER.casefold():
+            sheet.delete_cols(SCORE_COLUMN_INDEX, 1)
 
 
 def process_worksheet(sheet: Worksheet) -> None:
     max_data_row = sheet.max_row
-    remove_existing_result_columns(sheet)
-    sheet.insert_cols(SCORE_COLUMN_INDEX, 2)
+    remove_existing_score_column(sheet)
+    sheet.insert_cols(SCORE_COLUMN_INDEX)
     sheet.cell(row=1, column=SCORE_COLUMN_INDEX, value=SCORE_HEADER)
-    sheet.cell(row=1, column=DETAIL_COLUMN_INDEX, value=DETAIL_HEADER)
 
     for row in range(2, max_data_row + 1):
-        column_b = sheet.cell(row=row, column=2).value
-        column_m = sheet.cell(row=row, column=13).value
-        column_e = sheet.cell(row=row, column=5).value
-        column_h = sheet.cell(row=row, column=8).value
-        score = calculate_score(column_b, column_m, column_e, column_h)
-        detail = format_score_calculation(column_b, column_m, column_e, column_h)
+        score = calculate_score(
+            sheet.cell(row=row, column=2).value,
+            sheet.cell(row=row, column=13).value,
+            sheet.cell(row=row, column=5).value,
+            sheet.cell(row=row, column=8).value,
+        )
         sheet.cell(row=row, column=SCORE_COLUMN_INDEX, value=score)
-        sheet.cell(row=row, column=DETAIL_COLUMN_INDEX, value=detail)
 
 
 def process_workbook(file_stream: BytesIO) -> BytesIO:
