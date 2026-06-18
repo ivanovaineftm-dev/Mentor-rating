@@ -11,15 +11,15 @@ from app import calculate_score, process_workbook
 
 
 def test_calculate_score_example():
-    assert calculate_score(None, None, "сдан", "сдан") == 1.2
+    assert calculate_score(None, 123, "сдан", "сдан") == 1.2
 
 
 def test_calculate_score_with_dismissal_and_transfer():
-    assert calculate_score(123, None, "не сдан", "сдан") == 0.42
+    assert calculate_score(123, 456, "не сдан", "сдан") == 0.42
 
 
-def test_calculate_score_with_numeric_m_is_zero():
-    assert calculate_score(123, 456, "не сдан", "не сдан") == 0
+def test_calculate_score_with_blank_m_is_zero():
+    assert calculate_score(123, None, "не сдан", "не сдан") == 0
 
 
 def test_process_workbook_inserts_score_after_m_and_preserves_following_columns():
@@ -32,7 +32,7 @@ def test_process_workbook_inserts_score_after_m_and_preserves_following_columns(
     sheet.cell(row=2, column=2, value=None)
     sheet.cell(row=2, column=5, value="сдан")
     sheet.cell(row=2, column=8, value="сдан")
-    sheet.cell(row=2, column=13, value=None)
+    sheet.cell(row=2, column=13, value=100)
     sheet.cell(row=2, column=14, value="original N")
 
     source = BytesIO()
@@ -63,7 +63,7 @@ def test_process_workbook_replaces_existing_score_column():
     processed = load_workbook(result)
 
     assert processed.active.cell(row=1, column=14).value == "Балл"
-    assert processed.active.cell(row=2, column=14).value == 0.75
+    assert processed.active.cell(row=2, column=14).value == 0.4
 
 
 def test_calculate_route_accepts_excel_content_with_any_extension():
@@ -92,4 +92,4 @@ def test_calculate_route_accepts_excel_content_with_any_extension():
 
     processed = load_workbook(BytesIO(response.data))
     assert processed.active.cell(row=1, column=14).value == "Балл"
-    assert processed.active.cell(row=2, column=14).value == 1
+    assert processed.active.cell(row=2, column=14).value == 0.65
