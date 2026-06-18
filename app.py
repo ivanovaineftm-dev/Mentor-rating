@@ -42,7 +42,7 @@ def is_passed(value: Any) -> bool:
 
 def calculate_score(column_b: Any, column_m: Any, column_e: Any, column_h: Any) -> float:
     b_coef = 1 if is_blank(column_b) else 0 if is_numeric(column_b) else 1
-    m_coef = 1 if is_blank(column_m) else 0 if is_numeric(column_m) else 0
+    m_coef = 1 if is_numeric(column_m) else 0
     e_coef = 1 if is_passed(column_e) else 0
     h_coef = 1 if is_passed(column_h) else 0
 
