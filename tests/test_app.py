@@ -60,3 +60,32 @@ def test_process_workbook_replaces_existing_score_column():
 
     assert processed.active.cell(row=1, column=14).value == "Балл"
     assert processed.active.cell(row=2, column=14).value == 0.4
+
+
+def test_calculate_route_accepts_excel_content_with_any_extension():
+    workbook = Workbook()
+    sheet = workbook.active
+    sheet.cell(row=2, column=5, value="сдан")
+
+    source = BytesIO()
+    workbook.save(source)
+    source.seek(0)
+
+    from app import app
+
+    app.config.update(TESTING=True)
+    with app.test_client() as client:
+        response = client.post(
+            "/calculate",
+            data={"file": (source, "rating.anything")},
+            content_type="multipart/form-data",
+        )
+
+    assert response.status_code == 200
+    assert response.headers["Content-Disposition"].startswith(
+        "attachment; filename=rating_with_scores.xlsx"
+    )
+
+    processed = load_workbook(BytesIO(response.data))
+    assert processed.active.cell(row=1, column=14).value == "Балл"
+    assert processed.active.cell(row=2, column=14).value == 0.65
