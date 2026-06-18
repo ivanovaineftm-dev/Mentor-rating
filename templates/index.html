@@ -11,7 +11,7 @@
     <section class="card">
       <div class="badge">Excel → рейтинг</div>
       <h1>Расчет рейтинга сотрудников</h1>
-      <p class="lead">Загрузите Excel-файл, нажмите «Рассчитать» и скачайте файл с новым столбцом «Балл» после столбца M.</p>
+      <p class="lead">Загрузите файл .xlsx, нажмите «Рассчитать» и скачайте книгу с новым столбцом «Балл» сразу после столбца M. Расчет выполняется построчно для каждого сотрудника.</p>
 
       {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
@@ -26,15 +26,21 @@
       <form action="{{ url_for('calculate') }}" method="post" enctype="multipart/form-data" class="upload-form">
         <label class="file-drop">
           <span class="file-title">Выберите файл Excel</span>
-          <span class="file-note">Можно загрузить любой файл Excel — проверка выполняется при обработке</span>
-          <input type="file" name="file" accept=".xlsx,.xlsm,.xltx,.xltm,.xls,.xlt,.xlsb,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" required>
+          <span class="file-note">Поддерживается формат .xlsx; структура книги и остальные столбцы сохраняются</span>
+          <input type="file" name="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" required>
         </label>
         <button type="submit">Рассчитать</button>
       </form>
 
       <div class="formula">
         <strong>Формула:</strong>
-        <code>((0,4 × B) + (0,35 × M) + (0,25 × E)) × ((1 + (0,2 × H)))</code>
+        <code>(0,4 × B_coef + 0,35 × M_coef + 0,25 × E_coef) × (1 + 0,2 × H_coef)</code>
+        <ul class="rules">
+          <li>B: число = увольнение (0), пусто или текст = 1</li>
+          <li>M: число = перевод (1), пусто или текст = 0</li>
+          <li>E и H: только «сдан» после trim/lower дают коэффициент 1</li>
+          <li>Итог округляется до 2 знаков после запятой</li>
+        </ul>
       </div>
     </section>
   </main>

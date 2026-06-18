@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from io import BytesIO
+from math import isnan
 from pathlib import Path
 from typing import Any
 
@@ -18,7 +19,11 @@ app.config["MAX_CONTENT_LENGTH"] = 20 * 1024 * 1024
 
 
 def is_blank(value: Any) -> bool:
-    return value is None or (isinstance(value, str) and value.strip() == "")
+    if value is None:
+        return True
+    if isinstance(value, float) and isnan(value):
+        return True
+    return isinstance(value, str) and value.strip() == ""
 
 
 def is_numeric(value: Any) -> bool:
@@ -27,12 +32,12 @@ def is_numeric(value: Any) -> bool:
     if isinstance(value, (int, float)):
         return True
     if isinstance(value, str):
-        normalized = value.strip().replace(",", ".")
+        normalized = value.strip()
         try:
-            float(normalized)
+            parsed = float(normalized)
         except ValueError:
             return False
-        return True
+        return not isnan(parsed)
     return False
 
 
@@ -46,8 +51,8 @@ def calculate_score(column_b: Any, column_m: Any, column_e: Any, column_h: Any) 
     e_coef = 1 if is_passed(column_e) else 0
     h_coef = 1 if is_passed(column_h) else 0
 
-    score = ((0.4 * b_coef) + (0.35 * m_coef) + (0.25 * e_coef)) * ((1 + (0.2 * h_coef)))
-    return round(score, 4)
+    score = ((0.4 * b_coef) + (0.35 * m_coef) + (0.25 * e_coef)) * (1 + (0.2 * h_coef))
+    return round(score, 2)
 
 
 def remove_existing_score_column(sheet: Worksheet) -> None:

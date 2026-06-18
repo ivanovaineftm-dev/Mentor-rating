@@ -1,4 +1,9 @@
 from io import BytesIO
+from math import nan
+from pathlib import Path
+import sys
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import pytest
 
@@ -7,15 +12,37 @@ pytest.importorskip("flask")
 
 from openpyxl import Workbook, load_workbook
 
-from app import calculate_score, process_workbook
+from app import calculate_score, is_blank, is_numeric, process_workbook
 
 
-def test_calculate_score_example():
-    assert calculate_score(None, 123, "сдан", "сдан") == 1.2
+def test_blank_detection_matches_rules():
+    assert is_blank(None)
+    assert is_blank("")
+    assert is_blank("   ")
+    assert is_blank(nan)
+    assert not is_blank("text")
+
+
+def test_numeric_detection_is_strict_and_deterministic():
+    assert is_numeric(123)
+    assert is_numeric(45.6)
+    assert is_numeric("123")
+    assert is_numeric("45.6")
+    assert not is_numeric("45,6")
+    assert not is_numeric("abc")
+    assert not is_numeric("")
+
+
+def test_calculate_score_reference_example():
+    assert calculate_score(None, None, "сдан", "сдан") == 0.78
+
+
+def test_calculate_score_text_in_b_and_m_is_not_an_event():
+    assert calculate_score("уволен", "перевод", " СДАН ", " сдан ") == 0.78
 
 
 def test_calculate_score_with_dismissal_and_transfer():
-    assert calculate_score(123, 456, "не сдан", "сдан") == 0.42
+    assert calculate_score(123, "456", "не сдан", "сдан") == 0.42
 
 
 def test_calculate_score_with_blank_m_is_zero():
@@ -66,7 +93,7 @@ def test_process_workbook_replaces_existing_score_column():
     assert processed.active.cell(row=2, column=14).value == 0.4
 
 
-def test_calculate_route_accepts_excel_content_with_any_extension():
+def test_calculate_route_accepts_xlsx_content():
     workbook = Workbook()
     sheet = workbook.active
     sheet.cell(row=2, column=5, value="сдан")
@@ -81,7 +108,7 @@ def test_calculate_route_accepts_excel_content_with_any_extension():
     with app.test_client() as client:
         response = client.post(
             "/calculate",
-            data={"file": (source, "rating.anything")},
+            data={"file": (source, "rating.xlsx")},
             content_type="multipart/form-data",
         )
 
