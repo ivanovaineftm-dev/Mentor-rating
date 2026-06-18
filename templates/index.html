@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Расчет рейтинга сотрудников</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+  <main class="page">
+    <section class="card">
+      <div class="badge">Excel → рейтинг</div>
+      <h1>Расчет рейтинга сотрудников</h1>
+      <p class="lead">Загрузите Excel-файл, нажмите «Рассчитать» и скачайте файл с новым столбцом «Балл» после столбца M.</p>
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <div class="messages">
+            {% for category, message in messages %}
+              <p class="message {{ category }}">{{ message }}</p>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endwith %}
+
+      <form action="{{ url_for('calculate') }}" method="post" enctype="multipart/form-data" class="upload-form">
+        <label class="file-drop">
+          <span class="file-title">Выберите файл Excel</span>
+          <span class="file-note">Поддерживаются .xlsx, .xlsm, .xltx, .xltm</span>
+          <input type="file" name="file" accept=".xlsx,.xlsm,.xltx,.xltm" required>
+        </label>
+        <button type="submit">Рассчитать</button>
+      </form>
+
+      <div class="formula">
+        <strong>Формула:</strong>
+        <code>(0,4 × B + 0,35 × M + 0,25 × E) × (1 + 0,2 × H)</code>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
