@@ -26,30 +26,29 @@ def is_blank(value: Any) -> bool:
     return isinstance(value, str) and value.strip() == ""
 
 
-def is_numeric(value: Any) -> bool:
-    if is_blank(value) or isinstance(value, bool):
-        return False
-    if isinstance(value, (int, float)):
-        return True
-    if isinstance(value, str):
-        normalized = value.strip()
-        try:
-            parsed = float(normalized)
-        except ValueError:
-            return False
-        return not isnan(parsed)
-    return False
+def has_value(value: Any) -> bool:
+    return not is_blank(value)
 
 
-def is_passed(value: Any) -> bool:
-    return isinstance(value, str) and value.strip().casefold() == "сдан"
+def normalized_text(value: Any) -> str:
+    if not isinstance(value, str):
+        return ""
+    return value.strip().casefold()
+
+
+def is_training_passed(value: Any) -> bool:
+    return normalized_text(value) == "пройден"
+
+
+def is_exam_passed(value: Any) -> bool:
+    return normalized_text(value) == "сдан"
 
 
 def calculate_score(column_b: Any, column_m: Any, column_e: Any, column_h: Any) -> float:
-    b_coef = 1 if is_blank(column_b) else 0 if is_numeric(column_b) else 1
-    m_coef = 1 if is_numeric(column_m) else 0
-    e_coef = 1 if is_passed(column_e) else 0
-    h_coef = 1 if is_passed(column_h) else 0
+    b_coef = 0 if has_value(column_b) else 1
+    m_coef = 1 if has_value(column_m) else 0
+    e_coef = 1 if is_training_passed(column_e) else 0
+    h_coef = 1 if is_exam_passed(column_h) else 0
 
     score = ((0.4 * b_coef) + (0.35 * m_coef) + (0.25 * e_coef)) * (1 + (0.2 * h_coef))
     return round(score, 2)
