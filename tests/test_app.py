@@ -40,21 +40,21 @@ def test_normalized_text_trims_and_lowercases_strings_only():
 
 
 def test_calculate_score_user_example_filled_b_blank_m_failed_e_passed_h():
-    assert calculate_score("любое значение", None, "не пройден", "сдан") == 0
+    assert calculate_score("любое значение", None, "не пройден", "сдан") == 0.2
 
 
 def test_calculate_score_user_example_blank_b_blank_m_failed_e_passed_h():
-    assert calculate_score(None, None, "не пройден", "сдан") == 0.48
+    assert calculate_score(None, None, "не пройден", "сдан") == 0.6
 
 
 def test_calculate_score_uses_exact_allowed_e_and_h_values():
-    assert calculate_score(None, "перевод", " ПрОйДеН ", " СдАн ") == 1.2
-    assert calculate_score(None, "перевод", "сдан", "пройден") == 0.75
-    assert calculate_score(None, "перевод", "другое", "другое") == 0.75
+    assert calculate_score(None, "перевод", " ПрОйДеН ", " СдАн ") == 1.0
+    assert calculate_score(None, "перевод", "сдан", "пройден") == 0.6
+    assert calculate_score(None, "перевод", "другое", "другое") == 0.6
 
 
 def test_calculate_score_b_and_m_do_not_require_numbers():
-    assert calculate_score("уволен", "перевод", "пройден", "сдан") == 0.72
+    assert calculate_score("уволен", "перевод", "пройден", "сдан") == 0.6
 
 
 def test_calculate_score_blank_m_is_zero_and_blank_b_is_one():
@@ -83,7 +83,7 @@ def test_process_workbook_inserts_score_after_m_and_preserves_following_columns(
     processed_sheet = processed.active
 
     assert processed_sheet.cell(row=1, column=14).value == "Балл"
-    assert processed_sheet.cell(row=2, column=14).value == 1.2
+    assert processed_sheet.cell(row=2, column=14).value == 1.0
     assert processed_sheet.cell(row=1, column=15).value == "H14"
     assert processed_sheet.cell(row=2, column=15).value == "original N"
 
@@ -131,4 +131,4 @@ def test_calculate_route_accepts_xlsx_content():
 
     processed = load_workbook(BytesIO(response.data))
     assert processed.active.cell(row=1, column=14).value == "Балл"
-    assert processed.active.cell(row=2, column=14).value == 0.65
+    assert processed.active.cell(row=2, column=14).value == 0.6

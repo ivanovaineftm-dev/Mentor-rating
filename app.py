@@ -13,6 +13,11 @@ from werkzeug.utils import secure_filename
 SCORE_COLUMN_INDEX = 14  # Column N, immediately after M.
 SCORE_HEADER = "Балл"
 
+B_WEIGHT = 0.4
+M_WEIGHT = 0.2
+E_WEIGHT = 0.2
+H_WEIGHT = 0.2
+
 app = Flask(__name__)
 app.config["SECRET_KEY"] = "mentor-rating-local-secret"
 app.config["MAX_CONTENT_LENGTH"] = 20 * 1024 * 1024
@@ -50,7 +55,12 @@ def calculate_score(column_b: Any, column_m: Any, column_e: Any, column_h: Any) 
     e_coef = 1 if is_training_passed(column_e) else 0
     h_coef = 1 if is_exam_passed(column_h) else 0
 
-    score = ((0.4 * b_coef) + (0.35 * m_coef) + (0.25 * e_coef)) * (1 + (0.2 * h_coef))
+    score = (
+        (B_WEIGHT * b_coef)
+        + (M_WEIGHT * m_coef)
+        + (E_WEIGHT * e_coef)
+        + (H_WEIGHT * h_coef)
+    )
     return round(score, 2)
 
 
